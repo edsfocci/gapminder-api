@@ -256,6 +256,14 @@ def get_values_by(label_type, key, coord):
     return ("Must specify whether to get values by 'year' or 'country', " +
     "or 'both'.")
 
+def redirect(key):
+   r = requests.get('https://spreadsheets.google.com/pub',
+    allow_redirects=False,
+    params={'key': key})
+  new_key = re.match(r"https:\/\/docs\.google\.com\/spreadsheets\/d\/" +
+    r"(\S+)\/pub", r.headers['location']).group(1)
+  return new_key
+
 if __name__ == '__main__':
   app.run()
 
