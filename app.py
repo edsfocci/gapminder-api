@@ -3,7 +3,7 @@ from flask import request
 from flask import json
 from flask import jsonify
 from flask import redirect
-#from flask import render_template
+from flask import render_template
 from collections import Counter
 import requests
 import xmltodict
@@ -51,6 +51,7 @@ def index():
         'dataset.']
   })
 
+### DATASETS ###
 @app.route('/datasets/')
 def datasets():
   with open('private/datasets.json', 'r') as file:
@@ -95,6 +96,7 @@ def datasets_categorized():
 
   return jsonify(categories)
 
+### DATA ###
 @app.route('/data/')
 def data():
   key = request.args.get('key')
@@ -106,6 +108,13 @@ def data():
 
   if year and country:
     col = get_col_specific_year(key, year)
+
+    if type(col) == str:
+      pass
+    if col['status'] != 200:
+      key = handle_redirect(key)
+      col = get_col_specific_year(key, year)
+
     row = get_row_specific_country(key, country)
 
     if type(col) == str or type(row) == str:
@@ -116,31 +125,39 @@ def data():
         err.append(row)
       return str(err)
 
-    value = get_values_by('both', key, (row, col))
+    value = get_values_by('both', key, (row['data'], col['data']))
     value = {
-      'country': country,
-      'year': year,
-      'value': value['content']['#text']
+      'status': col['status'],
+      'data': {
+        'country': country,
+        'year': year,
+        'value': value['content']['#text']
+      }
     }
 
-    return jsonify({'data': value})
+    return jsonify(value)
 
   elif year:
     col = get_col_specific_year(key, year)
+
     if type(col) == str:
       return col
+    elif col['status'] != 200:
+      key = handle_redirect(key)
+      col = get_col_specific_year(key, year)
 
     countries = get_countries_available(key)
-    countries = map(lambda i: {
+    countries['data'] = map(lambda i: {
       'country': i['content']['#text'],
       'row': re.search(r"R(\d+)C\d+$", i['id']).group(1)
-    }, countries)
+    }, countries['data'])
 
-    data = get_values_by('year', key, col)
+    data = get_values_by('year', key, col['data'])
 
     def data_group(value):
       value_row = re.search(r"R(\d+)C\d+$", value['id']).group(1)
-      country = filter(lambda j: j['row'] == value_row, countries)[0]['country']
+      country = filter(lambda j: j['row'] == value_row,
+        countries['data'])[0]['country']
 
       return {
         'country': country,
@@ -148,25 +165,30 @@ def data():
         'value': value['content']['#text']
       }
 
-    data = map(data_group, data)
-    return jsonify({'data': data})
+    data = { 'data': map(data_group, data) }
+    data['status'] = col['status']
+    return jsonify(data)
 
   elif country:
     row = get_row_specific_country(key, country)
+
     if type(row) == str:
       return row
+    elif row['status'] != 200:
+      key = handle_redirect(key)
+      row = get_row_specific_country(key, country)
 
     years = get_years_available(key)
-    years = map(lambda i: {
+    years['data'] = map(lambda i: {
       'year': i['content']['#text'],
       'col': re.search(r"R\d+C(\d+)$", i['id']).group(1)
-    }, years)
+    }, years['data'])
 
-    data = get_values_by('country', key, row)
+    data = get_values_by('country', key, row['data'])
 
     def data_group(value):
       value_col = re.search(r"R\d+C(\d+)$", value['id']).group(1)
-      year = filter(lambda j: j['col'] == value_col, years)[0]['year']
+      year = filter(lambda j: j['col'] == value_col, years['data'])[0]['year']
 
       return {
         'country': country,
@@ -174,8 +196,9 @@ def data():
         'value': value['content']['#text']
       }
 
-    data = map(data_group, data)
-    return jsonify({'data': data})
+    data = { 'data': map(data_group, data) }
+    data['status'] = row['status']
+    return jsonify(data)
 
   else:
     return redirect("http://spreadsheets.google.com/pub?key=" + key +
@@ -190,47 +213,80 @@ def data_help():
 
   available = {}
   available['years'] = get_years_available(key)
-  available['years'] = map(lambda i: i['content']['#text'],
-    available['years'])
+
+  if available['years']['status'] != 200:
+    key = handle_redirect(key)
+    available['years'] = get_years_available(key)
+
+  available['years']['data'] = map(lambda i: i['content']['#text'],
+    available['years']['data'])
 
   available['countries'] = get_countries_available(key)
-  available['countries'] = map(lambda i: i['content']['#text'],
-    available['countries'])
+  available['countries']['data'] = map(lambda i: i['content']['#text'],
+    available['countries']['data'])
 
   return jsonify(available)
 
+### CLIENTS ###
+@app.route('/clients/js/')
+def clients_js():
+  return render_template('js/index.html')
+
+### HELPER FUNCTIONS ###
 def get_years_available(key):
   years = requests.get('https://spreadsheets.google.com/feeds/cells/' +
     key + '/od6/public/basic',
     params={'min-row': 1, 'max-row': 1, 'min-col': 2})
-  return xmltodict.parse(years.text)['feed']['entry']
+
+  if years.status_code != 200:
+    return { 'status': years.status_code }
+
+  years_dict = { 'status': years.status_code }
+  years_dict['data'] = xmltodict.parse(years.text)['feed']['entry']
+  return years_dict
 
 def get_countries_available(key):
   countries = requests.get('https://spreadsheets.google.com/feeds/cells/' +
     key + '/od6/public/basic',
     params={'min-col': 1, 'max-col': 1, 'min-row': 2})
-  return xmltodict.parse(countries.text)['feed']['entry']
+
+  if countries.status_code != 200:
+    return { 'status': countries.status_code }
+
+  countries_dict = { 'status': countries.status_code }
+  countries_dict['data'] = xmltodict.parse(countries.text)['feed']['entry']
+  return countries_dict
 
 def get_col_specific_year(key, year):
   avail_years = get_years_available(key)
-  year = filter(lambda i: i['content']['#text'] == year, avail_years)
+
+  if avail_years['status'] != 200:
+    return avail_years
+
+  year = filter(lambda i: i['content']['#text'] == year, avail_years['data'])
 
   if len(year) == 0:
     return "Year not found."
 
-  coords = re.search(r"R\d+C(\d+)$", year[0]['id'])
-  return int(coords.group(1))
+  coords = { 'status': avail_years['status'] }
+  coords['data'] = re.search(r"R\d+C(\d+)$", year[0]['id']).group(1)
+  return coords
 
 def get_row_specific_country(key, country):
   avail_countries = get_countries_available(key)
+
+  if avail_countries['status'] != 200:
+    return avail_countries
+
   country = filter(lambda i: i['content']['#text'] == country,
-    avail_countries)
+    avail_countries['data'])
 
   if len(country) == 0:
     return "Country not found."
 
-  coords = re.search(r"R(\d+)C\d+$", country[0]['id'])
-  return int(coords.group(1))
+  coords = { 'status': avail_countries['status'] }
+  coords['data'] = re.search(r"R(\d+)C\d+$", country[0]['id']).group(1)
+  return coords
 
 def get_values_by(label_type, key, coord):
   if label_type == 'year':
@@ -256,12 +312,12 @@ def get_values_by(label_type, key, coord):
     return ("Must specify whether to get values by 'year' or 'country', " +
     "or 'both'.")
 
-def redirect(key):
-   r = requests.get('https://spreadsheets.google.com/pub',
-    allow_redirects=False,
-    params={'key': key})
+def handle_redirect(key):
+  redirect = requests.get('https://spreadsheets.google.com/pub',
+    allow_redirects=False, params={'key': key})
+
   new_key = re.match(r"https:\/\/docs\.google\.com\/spreadsheets\/d\/" +
-    r"(\S+)\/pub", r.headers['location']).group(1)
+    r"(\S+)\/pub", redirect.headers['location']).group(1)
   return new_key
 
 if __name__ == '__main__':
