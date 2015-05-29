@@ -2,39 +2,40 @@
 <html lang="en-US">
 <head>
   <title>Gapminder!</title>
+  <link rel="stylesheet" type="text/css"
+  href="{{ url_for('static', filename='js/style.css') }}">
 </head>
 <body>
-  <form>
+  <div>
+    <label for="key">Datasets</label>
+    <input id="input-key" list="key" name="key" size="56" placeholder="Search"
+    />
+    <datalist id="key">
+      <!--option>Choose:</option-->
+    </datalist>
+  </div>
+
+  <span id="year-country" hidden="hidden">
+    <hr />
     <div>
-      <label for="key">Datasets</label>
-      <input id="input-key" list="key" name="key" size="56" placeholder="Search"
-      />
-      <datalist id="key">
-        <!--option>Choose:</option-->
-      </datalist>
+      <label for="year">Year</label>
+      <select id="year" name="year">
+        <option></option>
+      </select>
+
+      <label for="country">Country</label>
+      <select id="country" name="country">
+        <option></option>
+      </select>
     </div>
-
-    <span id="year-country" hidden="hidden">
-      <hr />
-      <div>
-        <label for="year">Year</label>
-        <select id="year" name="year">
-          <option></option>
-        </select>
-
-        <label for="country">Country</label>
-        <select id="country" name="country">
-          <option></option>
-        </select>
-      </div>
-    </span>
-  </form>
+  </span>
 
   <hr />
   <div id="results"></div>
 
   <script src="{{ url_for('static', filename='js/datasets.js') }}"></script>
   <script src="{{ url_for('static', filename='js/year_country.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data_output.js') }}"></script>
 </body>
 </html>
 

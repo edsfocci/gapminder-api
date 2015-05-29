@@ -1,16 +1,19 @@
 var inputKeys = document.getElementById('input-key');
-var currentDataset = "";
+var resultsTable = document.getElementById('results');
+window.currentDataset = "";
 
-var getDatasetOptions = function () {
-  if (window.datasets[inputKeys.value] && inputKeys.value != currentDataset) {
-    currentDataset = inputKeys.value;
+var getDatasetOptions = function() {
+  if (window.datasets[inputKeys.value] &&
+  inputKeys.value != window.currentDataset) {
+    clearResultsTable();
+    window.currentDataset = inputKeys.value;
 
     var years = document.getElementById('year');
     var countries = document.getElementById('country');
     years.disabled = true;
     countries.disabled = true;
 
-    var displayOptions = function () {
+    var displayOptions = function() {
       var yearCountry = document.getElementById('year-country');
 
       if (yearCountry.style.display === "inline") {
@@ -48,8 +51,19 @@ var getDatasetOptions = function () {
     var dataRequest = new XMLHttpRequest();
     dataRequest.onload = displayOptions;
     dataRequest.open( "GET", 'http://localhost:5000/data/help/?key=' +
-      window.datasets[currentDataset]);
+      window.datasets[window.currentDataset]);
     dataRequest.send();
+  }
+};
+
+var clearResultsTable = function() {
+  clearNode(resultsTable);
+};
+
+var clearNode = function(element) {
+  while(element.firstChild) {
+    clearNode(element.firstChild);
+    element.removeChild(element.firstChild);
   }
 };
 

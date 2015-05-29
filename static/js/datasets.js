@@ -1,4 +1,4 @@
-var showInputKeys = function () {
+var showInputKeys = function() {
   var inputKeys = document.getElementById('key');
   var keysObject = JSON.parse(keysRequest.responseText);
 
