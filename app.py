@@ -4,6 +4,8 @@ from flask import json
 from flask import jsonify
 from flask import redirect
 from flask import render_template
+from flask import url_for
+from flask.ext.cors import CORS
 from collections import Counter
 import requests
 import xmltodict
@@ -11,6 +13,7 @@ import re
 #import xml
 
 app = Flask(__name__)
+cors = CORS(app)
 
 @app.route('/')
 def index():

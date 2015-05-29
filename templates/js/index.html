@@ -7,35 +7,34 @@
   <form>
     <div>
       <label for="key">Datasets</label>
-      <select id="key" name="key">
-        <option value="volvo">Volvo</option>
-        <option value="saab">Saab</option>
-        <option value="mercedes">Mercedes</option>
-        <option value="audi">Audi</option>
-      </select>
+      <input id="input-key" list="key" name="key" size="56" placeholder="Search"
+      />
+      <datalist id="key">
+        <!--option>Choose:</option-->
+      </datalist>
     </div>
 
-    <hr />
+    <span id="year-country" hidden="hidden">
+      <hr />
+      <div>
+        <label for="year">Year</label>
+        <select id="year" name="year">
+          <option></option>
+        </select>
 
-    <div>
-      <label for="year">Year</label>
-      <select id="year" name="year">
-      </select>
-
-      <label for="country">Country</label>
-      <select id="country" name="country">
-      </select>
-    </div>
+        <label for="country">Country</label>
+        <select id="country" name="country">
+          <option></option>
+        </select>
+      </div>
+    </span>
   </form>
 
   <hr />
   <div id="results"></div>
 
-  <script>
-    var input-keys = document.getElementById('key');
-
-    
-  </script>
+  <script src="{{ url_for('static', filename='js/datasets.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/year_country.js') }}"></script>
 </body>
 </html>
 
