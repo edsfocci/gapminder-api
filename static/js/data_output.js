@@ -68,7 +68,7 @@ var getOutputs = function() {
 
     var dataRequest = new XMLHttpRequest();
     dataRequest.onload = displayResults;
-    dataRequest.open( "GET", 'http://localhost:5000/data/?key=' +
+    dataRequest.open( "GET", 'http://gapminder-api.herokuapp.com/data/?key=' +
       window.datasets[window.currentDataset] +
       '&year=' + year + '&country=' + country);
     dataRequest.send();

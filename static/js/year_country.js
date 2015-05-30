@@ -50,7 +50,7 @@ var getDatasetOptions = function() {
 
     var dataRequest = new XMLHttpRequest();
     dataRequest.onload = displayOptions;
-    dataRequest.open( "GET", 'http://localhost:5000/data/help/?key=' +
+    dataRequest.open( "GET", 'http://gapminder-api.herokuapp.com/data/help/?key=' +
       window.datasets[window.currentDataset]);
     dataRequest.send();
   }

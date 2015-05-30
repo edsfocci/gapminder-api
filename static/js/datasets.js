@@ -16,6 +16,6 @@ window.datasets = {};
 
 var keysRequest = new XMLHttpRequest();
 keysRequest.onload = showInputKeys;
-keysRequest.open( "GET", 'http://localhost:5000/datasets/');
+keysRequest.open( "GET", 'http://gapminder-api.herokuapp.com/datasets/');
 keysRequest.send();
 
