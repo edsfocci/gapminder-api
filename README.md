@@ -6,5 +6,5 @@ To run locally, clone this repo, go to the repo directory in the terminal on you
     pip install -r requirements.txt
     python app.py
 
-**Note**: only works with Python 2 currently
+**Now** works with both Python 2 and Python 3!
 
