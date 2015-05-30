@@ -71,7 +71,7 @@ def datasets_categories():
     category = datasets[key]['category']
     subcategory = datasets[key]['subcategory']
 
-    if not categories.has_key(category):
+    if not category in categories:
       categories[category] = Counter()
 
     categories[category][subcategory] += 1
@@ -89,10 +89,10 @@ def datasets_categorized():
     subcategory = datasets[key]['subcategory']
     indicator = datasets[key]['indicatorName']
 
-    if not categories.has_key(category):
+    if not category in categories:
       categories[category] = {}
 
-    if not categories[category].has_key(subcategory):
+    if not subcategory in categories[category]:
       categories[category][subcategory] = []
 
     categories[category][subcategory].append(indicator)
@@ -150,17 +150,17 @@ def data():
       col = get_col_specific_year(key, year)
 
     countries = get_countries_available(key)
-    countries['data'] = map(lambda i: {
+    countries['data'] = list(map(lambda i: {
       'country': i['content']['#text'],
       'row': re.search(r"R(\d+)C\d+$", i['id']).group(1)
-    }, countries['data'])
+    }, countries['data']))
 
     data = get_values_by('year', key, col['data'])
 
     def data_group(value):
       value_row = re.search(r"R(\d+)C\d+$", value['id']).group(1)
-      country = filter(lambda j: j['row'] == value_row,
-        countries['data'])[0]['country']
+      country = list(filter(lambda j: j['row'] == value_row,
+        countries['data']))[0]['country']
 
       return {
         'country': country,
@@ -168,7 +168,7 @@ def data():
         'value': value['content']['#text']
       }
 
-    data = { 'data': map(data_group, data) }
+    data = { 'data': list(map(data_group, data)) }
     data['status'] = col['status']
     return jsonify(data)
 
@@ -182,16 +182,17 @@ def data():
       row = get_row_specific_country(key, country)
 
     years = get_years_available(key)
-    years['data'] = map(lambda i: {
+    years['data'] = list(map(lambda i: {
       'year': i['content']['#text'],
       'col': re.search(r"R\d+C(\d+)$", i['id']).group(1)
-    }, years['data'])
+    }, years['data']))
 
     data = get_values_by('country', key, row['data'])
 
     def data_group(value):
       value_col = re.search(r"R\d+C(\d+)$", value['id']).group(1)
-      year = filter(lambda j: j['col'] == value_col, years['data'])[0]['year']
+      year = list(filter(lambda j: j['col'] == value_col,
+        years['data']))[0]['year']
 
       return {
         'country': country,
@@ -199,7 +200,7 @@ def data():
         'value': value['content']['#text']
       }
 
-    data = { 'data': map(data_group, data) }
+    data = { 'data': list(map(data_group, data)) }
     data['status'] = row['status']
     return jsonify(data)
 
@@ -221,12 +222,12 @@ def data_help():
     key = handle_redirect(key)
     available['years'] = get_years_available(key)
 
-  available['years']['data'] = map(lambda i: i['content']['#text'],
-    available['years']['data'])
+  available['years']['data'] = list(map(lambda i: i['content']['#text'],
+    available['years']['data']))
 
   available['countries'] = get_countries_available(key)
-  available['countries']['data'] = map(lambda i: i['content']['#text'],
-    available['countries']['data'])
+  available['countries']['data'] = list(map(lambda i: i['content']['#text'],
+    available['countries']['data']))
 
   return jsonify(available)
 
@@ -266,7 +267,8 @@ def get_col_specific_year(key, year):
   if avail_years['status'] != 200:
     return avail_years
 
-  year = filter(lambda i: i['content']['#text'] == year, avail_years['data'])
+  year = list(filter(lambda i: i['content']['#text'] == year,
+    avail_years['data']))
 
   if len(year) == 0:
     return "Year not found."
@@ -281,8 +283,8 @@ def get_row_specific_country(key, country):
   if avail_countries['status'] != 200:
     return avail_countries
 
-  country = filter(lambda i: i['content']['#text'] == country,
-    avail_countries['data'])
+  country = list(filter(lambda i: i['content']['#text'] == country,
+    avail_countries['data']))
 
   if len(country) == 0:
     return "Country not found."
